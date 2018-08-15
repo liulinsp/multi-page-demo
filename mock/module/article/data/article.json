@@ -1,0 +1,7 @@
+{
+  "id": "@id()",
+  "categoryId": "4",
+  "title": "@ctitle(2, 20)",
+  "source": "未知",
+  "articleDate": "@date()"
+}
