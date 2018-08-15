@@ -41,7 +41,7 @@ export default {
   methods: {
     doBack () {
       // window.history.back()
-      window.location.href = '/'
+      window.location.href = 'index.html'
     }
   }
 }

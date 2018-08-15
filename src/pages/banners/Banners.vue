@@ -18,15 +18,15 @@ export default {
     return {
       imgList: [
         {
-          src: '/static/img/banner1.png',
+          src: 'static/img/banner1.png',
           link: 'http://www.baidu.com'
         },
         {
-          src: '/static/img/banner2.png',
+          src: 'static/img/banner2.png',
           link: 'http://www.hao123.com'
         },
         {
-          src: '/static/img/banner3.png'
+          src: 'static/img/banner3.png'
         }
       ]
     }

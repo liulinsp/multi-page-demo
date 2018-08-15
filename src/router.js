@@ -32,7 +32,7 @@ function validateRoute (path) {
 export function createRouter ({routes = []}) {
   const router = new Router({
     // mode: 'history',
-    base: '/',
+    // base: '/',
     linkActiveClass: 'active',
     routes: [
       ...routes,
