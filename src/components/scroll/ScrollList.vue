@@ -56,9 +56,9 @@ export default {
   watch: {
     dataList () {
       this.$nextTick(() => {
-        this.$refs.scroll.initScroll()
+        this.$refs.scroll.initScroll(true) // 重新初始化滚动条，并保持滚动条位置不变
         if (this.eventType) {
-          var type = this.eventType
+          let type = this.eventType
           setTimeout(() => {
             this.$refs.scroll.finish(type)
           }, 1000)
