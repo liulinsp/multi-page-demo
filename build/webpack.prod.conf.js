@@ -7,7 +7,7 @@ const merge = require('webpack-merge')
 const baseWebpackConfig = require('./webpack.base.conf')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 // const HtmlWebpackPlugin = require('html-webpack-plugin')
-const MultipageWebpackPlugin = require('multipage-webpack-plugin')
+const MultipageWebpackPlugin = require('./plugin/multipage-webpack-plugin')
 const InlineScriptPlugin = require('./plugin/inline-script-html-webpack-plugin')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
@@ -109,7 +109,7 @@ const webpackConfig = merge(baseWebpackConfig, {
         ignore: ['.*']
       }
     ]),
-    /* 预渲染*/
+    /* 预渲染
     new PrerenderSPAPlugin({
       // Required - The path to the webpack-outputted app to prerender.
       staticDir: path.join(__dirname, '../dist'),
@@ -127,9 +127,35 @@ const webpackConfig = merge(baseWebpackConfig, {
         injectProperty: '__PRERENDER_INJECTED',
         inject: {}
       })
-    })
+    }) */
   ]
 })
+
+/* 预渲染 */
+const prerenderList = config.build.prerenderList
+if (prerenderList && prerenderList.length > 0) {
+  prerenderList.forEach(page => {
+    webpackConfig.plugins.push(
+      new PrerenderSPAPlugin({
+        // Required - The path to the webpack-outputted app to prerender.
+        staticDir: path.join(config.build.assetsRoot),
+        // Optional - The location of index.html
+        indexPath: path.join(config.build.assetsRoot, page + '.html'),
+        // Required - Routes to render.
+        routes: [ '/' ],
+        postProcess (renderedRoute) {
+          renderedRoute.outputPath = path.join(config.build.assetsRoot, page + '.html')
+          return renderedRoute
+        },
+        renderer: new Renderer({
+          // Optional - The name of the property to add to the window object with the contents of `inject`.
+          injectProperty: '__PRERENDER_INJECTED',
+          inject: {}
+        })
+      })
+    )
+  })
+}
 
 if (config.build.productionGzip) {
   const CompressionWebpackPlugin = require('compression-webpack-plugin')

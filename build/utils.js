@@ -110,6 +110,31 @@ exports.createNotifierCallback = () => {
 }
 
 // 在pageDir中寻找各个页面入口
+exports.getEntries = function (pageDir, entryPath, folders) {
+  let entry = {}
+  let pageDirPath = path.join(__dirname, '..', pageDir)
+  folders = folders ||  []
+
+  fs.readdirSync(pageDirPath)
+     // 发现文件夹，就认为是页面模块
+    .filter(function (f) {
+      return fs.statSync(path.join(pageDirPath, f)).isDirectory()
+    })
+    .forEach(function (f) {
+      let tempEntryFilePath = path.join(__dirname, '..', [pageDir, f, entryPath].join('/'))
+      // 如果有entry.js文件说明是页面，否则是目录
+      let isPage = fs.existsSync(tempEntryFilePath)
+      if (!isPage) { // 如果是目录，则继续遍历
+        let subEntry = exports.getEntries(pageDir + '/' + f, entryPath, [...folders, f])
+        Object.assign(entry, subEntry)
+      } else { // 如果是页面，添加入口js
+        let entryName = [...folders, path.basename(f)].join('_')
+        entry[entryName] = [pageDir, f, entryPath].join('/')
+      }
+    })
+  return entry
+}
+/*
 exports.getEntries = function (pageDir, entryPath) {
   var entry = {}
   var pageDirPath = path.join(__dirname, '..', pageDir)
@@ -123,7 +148,7 @@ exports.getEntries = function (pageDir, entryPath) {
     })
   return entry
 }
-
+*/
 
 exports.getHistoryRewrites = function (pageDir) {
   let pageDirPath = path.join(__dirname, '..', pageDir)
@@ -142,3 +167,5 @@ exports.getHistoryRewrites = function (pageDir) {
       }
     })
 }
+
+

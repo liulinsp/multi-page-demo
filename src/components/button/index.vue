@@ -135,7 +135,7 @@ export default {
   }
 }
 </script>
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 .btn {
   display: inline-block;
   font-weight: 400;
