@@ -1,13 +1,12 @@
 <template>
   <div class="banners-container">
-    <ul class="banners-wrap">
-      <li class="img-wrap" v-for="(item, index) in bannerList" :key="item.src"
-          :class="isStart ? (index === curIndex ? 'show' : 'hide') : ''"
-          :style="{animationDuration:speed + 'ms', zIndex: index===defaultIndex ? 1 : 0}"
-          @click="linkHandle(item)">
-        <img :src="item.src" alt="">
-      </li>
-    </ul>
+    <div class="banners-wrap" ref="bannersWrap">
+      <div class="banner-item" v-for="item in banners" :key="item.src"
+           :class="[item.animationClass]"
+           :style="item.style"
+           @click="linkHandle(item)">
+      </div>
+    </div>
     <div class="nav-wrap">
       <b class="nav-index" v-for="(item, index) in bannerList" :key="index" :class="[indexClass, index === curIndex ? 'cur' : '']"></b>
     </div>
@@ -44,31 +43,105 @@ export default {
   },
   data () {
     return {
-      curIndex: this.defaultIndex,
-      intervalId: null,
-      isStart: false
+      curIndex: this.defaultIndex, // 当前索引
+      intervalId: null, // 定时器ID
+      isStart: false, // 是否开始动画
+      isReverse: false // 动画是否反向
     }
   },
   computed: {
     indexClass () {
       return 'nav-' + this.indexType
+    },
+    banners () {
+      let list = this.bannerList
+      let length = this.bannerList.length
+      for (let i = 0; i < length; i++) {
+        let animationClass = ''
+        let style = {
+          animationDuration: this.speed + 'ms',
+          backgroundImage: `url('${list[i].src}')`
+        }
+        if (this.isStart) {
+          if (this.isReverse) {
+            if (i === this.curIndex) {
+              animationClass = 'show-reverse'
+            } else if (i === (this.curIndex + 1) % length) {
+              animationClass = 'hide-reverse'
+            }
+          } else {
+            if (i === this.curIndex) {
+              animationClass = 'show'
+            } else if (i === (this.curIndex === 0 ? length - 1 : this.curIndex - 1)) {
+              animationClass = 'hide'
+            }
+          }
+        } else {
+          if (i === this.curIndex) {
+            animationClass = 'cur'
+          }
+        }
+        list[i].animationClass = animationClass
+        list[i].style = style
+      }
+      return list
     }
   },
   mounted () {
-    this.intervalId = setInterval(() => {
+    this.intervalId = setInterval(this.start, this.interval)
+    this.addListener()
+  },
+  methods: {
+    linkHandle (item) {
+      if (item.link) {
+        window.open(item.link)
+      }
+    },
+    start () {
       this.isStart = true
+      this.isReverse = false
       let maxIndex = this.bannerList.length - 1
       if (this.curIndex >= maxIndex) {
         this.curIndex = 0
       } else {
         this.curIndex++
       }
-    }, this.interval)
-  },
-  methods: {
-    linkHandle (item) {
-      if (item.link) {
-        window.open(item.link)
+    },
+    onSwipe (direction) {
+      if (direction) {
+        clearInterval(this.intervalId)
+        this.isReverse = direction < 0
+        this.curIndex += direction
+        let listLength = this.bannerList.length
+        if (this.curIndex >= listLength) {
+          this.curIndex = 0
+        } if (this.curIndex < 0) {
+          this.curIndex = listLength - 1
+        }
+        this.isStart = true
+        this.intervalId = setInterval(this.start, this.interval)
+      }
+    },
+    addListener () {
+      const bannersWrap = this.$refs.bannersWrap
+      bannersWrap.addEventListener('touchstart', this.touchStartHandler)
+      bannersWrap.addEventListener('touchmove', this.touchMoveHandler)
+      bannersWrap.addEventListener('touchend', this.touchEndHandler)
+    },
+    touchStartHandler (e) {
+      this.startX = e.touches[0].pageX
+      this.moveEndX = this.startX
+    },
+    touchMoveHandler (e) {
+      this.moveEndX = e.changedTouches[0].pageX
+    },
+    touchEndHandler (e) {
+      if (this.moveEndX - this.startX > 50) {
+        this.onSwipe(-1)
+        e.stopPropagation()
+      } else if (this.moveEndX - this.startX < -50) {
+        this.onSwipe(1)
+        e.stopPropagation()
       }
     }
   },
@@ -89,27 +162,36 @@ $dotSize: 8px;
   height: 100%;
   white-space: nowrap;
   background-color: #cdcdcd;
-  .img-wrap{
+  .banner-item{
     position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: #fff;
-    img{
-      width: 100%;
-      height: 100%;
-    }
-    animation-timing-function: ease;
+    background: #000 no-repeat center;
+    background-size: cover;
+    animation-timing-function: ease-in-out;
+    z-index: 0;
+  }
+  .cur,.show,.show-reverse{
+    z-index: 2;
+  }
+  .hide, .hide-reverse{
+    z-index: 1;
   }
   .show{
     animation-name: show-in;
-    // animation: show-in .5s ease-out;
   }
   .hide{
     animation-name: show-out;
-    // animation: show-out .5s ease-out;
     transform: translate3d(-100%, 0, 0);
+  }
+  .show-reverse{
+    animation-name: show-in-reverse;
+  }
+  .hide-reverse{
+    animation-name: show-out-reverse;
+    transform: translate3d(100%, 0, 0);
   }
 }
 .nav-wrap{
@@ -169,6 +251,22 @@ $dotSize: 8px;
   }
   100% {
     transform: translate3d(-100%, 0, 0);
+  }
+}
+@keyframes show-in-reverse{
+  0% {
+    transform: translate3d(-100%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes show-out-reverse{
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(100%, 0, 0);
   }
 }
 </style>
